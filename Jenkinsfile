@@ -60,19 +60,19 @@ pipeline {
             }
             environment {
                 NETLIFY_AUTH_TOKEN = credentials('NETLIFY_AUTH_TOKEN')
-                SITE_ID = 'fd05daaa-65c0-40c3-9727-3505b0757b79'
+                NETLIFY_SITE_ID = 'fd05daaa-65c0-40c3-9727-3505b0757b79'
             }
             steps {
+
                 sh '''
-                echo "Ensuring build directory exists..."
-                test -d build || { echo "Build directory missing"; exit 1; }
-
-                echo "Installing Netlify CLI..."
-                npm install -g netlify-cli || { echo "Failed to install Netlify CLI"; exit 1; }
-
+                npm install netlify-cli || { echo "Failed to install Netlify CLI"; exit 1; }
+                # Check the installed version of Netlify CLI
+                node_modules/.bin/netlify --version
+                # Print a message about deploying, using the Netlify site ID from an environment variable
+                echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"
                 echo "Deploying to Netlify..."
-                netlify deploy --auth $NETLIFY_AUTH_TOKEN --site $SITE_ID --prod --dir=build || { echo "Deployment failed"; exit 1; }
-
+                netlify deploy --auth $NETLIFY_AUTH_TOKEN --site $NETLIFY_SITE_ID --prod --dir=build || { echo "Deployment failed"; exit 1; }
+                node_modules/.bin/netlify status
                 echo "Deployment successful."
                 '''
             }
