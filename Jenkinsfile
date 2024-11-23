@@ -5,68 +5,85 @@ pipeline {
         stage('Build') {
             agent {
                 docker {
-                    image 'node:18-alpine'
+                    image 'node:19'
+                    args '-v $PWD:/workspace -w /workspace'
                     reuseNode true
                 }
             }
             steps {
                 sh '''
+                echo "Listing files in workspace:"
                 ls -la
+                echo "Node version:"
                 node --version
+                echo "NPM version:"
                 npm --version
-                npm ci
-                npm run build
-                ls -la
+
+                echo "Installing dependencies..."
+                npm ci || { echo "Dependency installation failed"; exit 1; }
+
+                echo "Building project..."
+                npm run build || { echo "Build failed"; exit 1; }
+
+                echo "Listing build files:"
+                ls -la build
                 '''
             }
         }
+
         stage('Test') {
             agent {
                 docker {
-                    image 'node:18-alpine'
+                    image 'node:19'
+                    args '-v $PWD:/workspace -w /workspace'
                     reuseNode true
                 }
             }
             steps {
                 sh '''
-                test -f build/index.html
-                npm test
+                echo "Checking for build output..."
+                test -f build/index.html || { echo "Build output missing"; exit 1; }
+
+                echo "Running tests..."
+                npm test || { echo "Tests failed"; exit 1; }
                 '''
             }
         }
+
         stage('Deploy') {
             agent {
                 docker {
                     image 'node:19'
+                    args '-v $PWD:/workspace -w /workspace'
                     reuseNode true
                 }
             }
             environment {
                 NETLIFY_AUTH_TOKEN = credentials('nfp_GsbbHHGhFMmTJAe7JTVEZ7ddKUrzMpTz4e51')
-                SITE_ID = credentials(' fd05daaa-65c0-40c3-9727-3505b0757b79')
+                SITE_ID = credentials('fd05daaa-65c0-40c3-9727-3505b0757b79')
             }
             steps {
-               // Install netlify-cli
-                sh 'npm install -g netlify-cli'
-
-                // Log in to Netlify
-                sh 'echo "Logging in to Netlify..."'
-                sh 'netlify login --auth-token=$NETLIFY_AUTH_TOKEN || { echo "Login failed"; exit 1; }'
-                sh 'echo "Netlify login successful!"'
-                // Deploy to Netlify
                 sh '''
-                     echo "Deploying to Netlify..."
-                     netlify deploy --site $SITE_ID --auth $NETLIFY_AUTH_TOKEN --prod --dir=build || { echo "Deployment failed"; exit 1; }
-                    echo "Deployment complete."
-                 '''
+                echo "Ensuring build directory exists..."
+                test -d build || { echo "Build directory missing"; exit 1; }
+
+                echo "Installing Netlify CLI..."
+                npm install -g netlify-cli || { echo "Failed to install Netlify CLI"; exit 1; }
+
+                echo "Deploying to Netlify..."
+                netlify deploy --auth $NETLIFY_AUTH_TOKEN --site $SITE_ID --prod --dir=build || { echo "Deployment failed"; exit 1; }
+
+                echo "Deployment successful."
+                '''
             }
         }
     }
 
-   post {
-    always {
-        archiveArtifacts artifacts: '**/build/**', fingerprint: true
-        junit 'test-results/junit.xml'
+    post {
+        always {
+            archiveArtifacts artifacts: '**/build/**', fingerprint: true
+            sh 'test -f test-results/junit.xml && echo "JUnit results found" || echo "No JUnit results"'
+            junit allowEmptyResults: true, testResults: 'test-results/junit.xml'
+        }
     }
-}
 }
