@@ -27,13 +27,13 @@ pipeline {
                     image 'node:18-alpine'
                     reuseNode true
                 }
-            }
-            steps {
-                sh '''
-                test -f build/index.html
-                npm test
-                '''
-            }
+              }
+              steps {
+                  sh '''
+                  test -f build/index.html
+                  npm test
+                  '''
+              }
         }
         stage('E2E') {
   agent {
@@ -47,17 +47,6 @@ pipeline {
     sh 'node_modules/.bin/serve -s build &'
     sh 'sleep 10'
     sh 'npx playwright test --reporter=html'
-  }
-}
-
-post {
-  always {
-    publishHTML(
-      allowMissing: false,
-      alwaysLinkToLastBuild: false,
-      keepAll: false,
-      reportDir: '.'
-    )
   }
 }
         stage('Deploy') {
@@ -75,8 +64,15 @@ post {
             }
         }
     }
+
     post {
         always {
+            publishHTML(
+              allowMissing: false,
+              alwaysLinkToLastBuild: false,
+              keepAll: false,
+              reportDir: '.'
+            )
             junit 'test-results/junit.xml'
         }
     }
