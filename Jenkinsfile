@@ -42,11 +42,11 @@ pipeline {
       reuseNode true
     }
   }
-  steps {
+steps {
     sh 'npm install'
     sh 'node_modules/.bin/serve -s build -p 8080 &'
-    sh 'sleep 20'
-    sh 'lsof -i :8080'
+    sh 'sleep 10'
+    sh 'curl -s http://localhost:8080'
     sh 'npx playwright test --reporter=html'
   }
 }
