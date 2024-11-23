@@ -59,8 +59,8 @@ pipeline {
                 }
             }
             environment {
-                NETLIFY_AUTH_TOKEN = credentials('nfp_GsbbHHGhFMmTJAe7JTVEZ7ddKUrzMpTz4e51')
-                SITE_ID = credentials('fd05daaa-65c0-40c3-9727-3505b0757b79')
+                NETLIFY_AUTH_TOKEN = credentials('NETLIFY_AUTH_TOKEN')
+                SITE_ID = 'fd05daaa-65c0-40c3-9727-3505b0757b79'
             }
             steps {
                 sh '''
