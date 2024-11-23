@@ -42,6 +42,8 @@ pipeline {
                     reuseNode true
                 }
             }
+            environment {
+        NETLIFY_SITE_ID = credentials('ceabc61a-f40d-44b1-a80b-c7c18c50ede5')
             steps {
               sh '''
              npm install netlify-cli 
