@@ -42,10 +42,11 @@ pipeline {
                 }
             }
             environment {
-                NETLIFY_AUTH_TOKEN = credentials('netlify-auth-token')
-                SITE_ID = credentials('netlify-site-id')
+                NETLIFY_AUTH_TOKEN = credentials('nfp_GsbbHHGhFMmTJAe7JTVEZ7ddKUrzMpTz4e51')
+                SITE_ID = credentials(' fd05daaa-65c0-40c3-9727-3505b0757b79')
             }
             steps {
+                sh 'npm install -g netlify-cli'
                 sh 'echo "Logging in to Netlify..."'
                 sh 'netlify login --auth-token=$NETLIFY_AUTH_TOKEN'
                 sh 'echo "Deploying to Netlify..."'
