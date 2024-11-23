@@ -52,7 +52,7 @@ pipeline {
                 // Log in to Netlify
                 sh 'echo "Logging in to Netlify..."'
                 sh 'netlify login --auth-token=$NETLIFY_AUTH_TOKEN || { echo "Login failed"; exit 1; }'
-
+                sh 'echo "Netlify login successful!"'
                 // Deploy to Netlify
                 sh '''
                      echo "Deploying to Netlify..."
@@ -63,15 +63,10 @@ pipeline {
         }
     }
 
-    post {
-        always {
-            publishHTML(
-                allowMissing: false,
-                alwaysLinkToLastBuild: false,
-                keepAll: false,
-                reportDir: '.'
-            )
-            junit 'test-results/junit.xml'
-        }
+   post {
+    always {
+        archiveArtifacts artifacts: '**/build/**', fingerprint: true
+        junit 'test-results/junit.xml'
     }
+}
 }
