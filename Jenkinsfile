@@ -46,12 +46,19 @@ pipeline {
                 SITE_ID = credentials(' fd05daaa-65c0-40c3-9727-3505b0757b79')
             }
             steps {
+               // Install netlify-cli
                 sh 'npm install -g netlify-cli'
+
+                // Log in to Netlify
                 sh 'echo "Logging in to Netlify..."'
-                sh 'netlify login --auth-token=$NETLIFY_AUTH_TOKEN'
-                sh 'echo "Deploying to Netlify..."'
-                sh 'netlify deploy --site $SITE_ID --auth $NETLIFY_AUTH_TOKEN --prod'
-                sh 'echo "Deployment complete."'
+                sh 'netlify login --auth-token=$NETLIFY_AUTH_TOKEN || { echo "Login failed"; exit 1; }'
+
+                // Deploy to Netlify
+                sh '''
+                     echo "Deploying to Netlify..."
+                     netlify deploy --site $SITE_ID --auth $NETLIFY_AUTH_TOKEN --prod --dir=build || { echo "Deployment failed"; exit 1; }
+                    echo "Deployment complete."
+                 '''
             }
         }
     }
