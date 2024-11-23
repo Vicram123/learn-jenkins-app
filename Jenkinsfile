@@ -5,7 +5,7 @@ pipeline {
         stage('Build') {
             agent {
                 docker {
-                    image 'node:19'
+                    image 'node:18-alpine'
                     args '-v $PWD:/workspace -w /workspace'
                     reuseNode true
                 }
@@ -34,7 +34,7 @@ pipeline {
         stage('Test') {
             agent {
                 docker {
-                    image 'node:19'
+                    image 'node:18-alpine'
                     args '-v $PWD:/workspace -w /workspace'
                     reuseNode true
                 }
@@ -53,7 +53,7 @@ pipeline {
         stage('Deploy') {
             agent {
                 docker {
-                    image 'node:19'
+                    image 'node:18-alpine'
                     args '-v $PWD:/workspace -w /workspace'
                     reuseNode true
                 }
@@ -63,18 +63,26 @@ pipeline {
                 NETLIFY_SITE_ID = 'fd05daaa-65c0-40c3-9727-3505b0757b79'
             }
             steps {
-
                 sh '''
-                npm install netlify-cli || { echo "Failed to install Netlify CLI"; exit 1; }
-                # Check the installed version of Netlify CLI
-                node_modules/.bin/netlify --version
-                # Print a message about deploying, using the Netlify site ID from an environment variable
-                echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"
-                echo "Deploying to Netlify..."
-                netlify deploy --auth $NETLIFY_AUTH_TOKEN --site $NETLIFY_SITE_ID --prod --dir=build || { echo "Deployment failed"; exit 1; }
-                node_modules/.bin/netlify status
-                echo "Deployment successful."
-                '''
+                        # Install Netlify CLI locally
+                        npm install netlify-cli || { echo "Failed to install Netlify CLI"; exit 1; }
+
+                        # Check Netlify CLI version
+                        node_modules/.bin/netlify --version
+
+                        # Notify about the deployment
+                        echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"
+
+                        # Perform the deployment
+                        echo "Deploying to Netlify..."
+                        node_modules/.bin/netlify deploy --auth $NETLIFY_AUTH_TOKEN --site $NETLIFY_SITE_ID --prod --dir=build || { echo "Deployment failed"; exit 1; }
+
+                        # Check the status
+                        node_modules/.bin/netlify status
+
+                        # Notify successful deployment
+                        echo "Deployment successful."
+                    '''
             }
         }
     }
